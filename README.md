@@ -1,4 +1,4 @@
-# Triangle-based Rendering
+# Triangle-Based Rendering
 It is an implementation of an efficient method to render 3D scenes with many lights. This method reduces lighting calculation by culling lights dynamically. It is similar to tile-based rendering, but there are two main modifications: a new design to accumulate lights and use a triangle-based culling method.
 
 This project is implemented via DirectX 12 graphics API, and it uses some new DirectX 12 features. To run the executable, it requires the graphics hardware that supports DirectX 12.
