@@ -6,6 +6,7 @@ This project is implemented via DirectX 12 graphics API, and it uses some new Di
 * Visual Studio 2015 (https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx)
 * Windows 10 SDK (https://dev.windows.com/en-us/downloads/windows-10-sdk)
 * FBX SDK 2016.1.2 VS2015 (http://www.autodesk.com/products/fbx/overview)
+
 ### Interactions
 Mouse/Keyboard:
 - Mouse : Rotate camera (left click on press)
