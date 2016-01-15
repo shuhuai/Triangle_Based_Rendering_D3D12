@@ -61,6 +61,7 @@ public:
 	void RenderQuad(ID3D12GraphicsCommandList* const  command);
 
 
+
 private:
 	void CreateTileBasedPSO();
 	void CreateLightPassPsO();
@@ -72,6 +73,7 @@ private:
 	void CreateDSV();
 	void CreateRTV();
 	void CreateSampler();
+	void SetParametersLightPso(ID3D12GraphicsCommandList * const command);
 
 	// Total Root Parameter Count: 7.
 	// [0] : CBV for the camera data (b0)
@@ -110,6 +112,7 @@ private:
 
 	D3D12_GPU_VIRTUAL_ADDRESS m_lightBufferGpuAdr;
 	D3D12_GPU_VIRTUAL_ADDRESS m_lightIdxBufferGpuAdr;
+	D3D12_GPU_VIRTUAL_ADDRESS m_lightCounterBufferGpuAdr;
 	D3D12_GPU_VIRTUAL_ADDRESS m_lightIdxCbGpuAdr;
 
 

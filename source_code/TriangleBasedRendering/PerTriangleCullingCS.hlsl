@@ -12,6 +12,7 @@ StructuredBuffer<float> gDepthPlaneSRV : register(t1);	// Depth planes for clust
 ConstantBuffer<ClusteredData> gCB : register(b0);		// Light culling information (size of tile, light number and etc...).
 ConstantBuffer<ViewData> gViewCB : register(b1);		// Camera data.
 RWStructuredBuffer<ClusteredBuffer> gDataUAV : register(u0);	// Light indexed buffer.
+RWStructuredBuffer<int> gLightCounterUAV : register(u1);	// Light counter buffer.
 Texture2D<float> gDepthBuffer : register(t2);
 
 // Group shared variables.
@@ -209,10 +210,12 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 Gid : SV_GroupID, uint3 GTid :
 	[branch]
 	if (Gindex == 0)
 	{
-		gDataUAV[tileIdxFlattened*2].counter = ldsTriUpLightCounter;
+
 		gDataUAV[tileIdxFlattened*2].lightIdxs = ldsTriUpLightIdx;
-		gDataUAV[tileIdxFlattened * 2 +1].counter = ldsTriDownLightCounter;
 		gDataUAV[tileIdxFlattened*2+1].lightIdxs = ldsTriDownLightIdx;
+
+		gLightCounterUAV[tileIdxFlattened * 2] = ldsTriUpLightCounter;
+		gLightCounterUAV[tileIdxFlattened * 2 + 1] = ldsTriDownLightCounter;
 
 	}
 

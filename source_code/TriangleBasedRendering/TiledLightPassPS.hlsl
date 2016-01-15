@@ -13,6 +13,7 @@ Texture2D gDepth: register(t3);
 StructuredBuffer<ClusteredBuffer> gPerTileLightIndex : register(t5);
 ConstantBuffer<ClusteredData> gCB : register(b2);
 StructuredBuffer<PointLight> gLightSRV : register(t6);
+StructuredBuffer<int> gPerTileLightCounter : register(t7);	// Light counter buffer.
 
 float4 main(gs_in  pIn) : SV_TARGET
 {
@@ -36,7 +37,7 @@ float4 main(gs_in  pIn) : SV_TARGET
 
 	float3 col = 0;
 		[loop]
-		for (int i = 0; i < gPerTileLightIndex[index].counter; i++)
+		for (int i = 0; i < gPerTileLightCounter[index]; i++)
 		{
 			PointLight L;
 			L = gLightSRV[gPerTileLightIndex[index].lightIdxs[i]];

@@ -36,7 +36,6 @@ struct PointLight
 // A data structure for an element of light indexed buffer.
 struct ClusteredBuffer
 {
-	uint counter;
 	uint lightIdxs[PerClusterMaxLight];
 };
 // A constant buffer structure for light information.

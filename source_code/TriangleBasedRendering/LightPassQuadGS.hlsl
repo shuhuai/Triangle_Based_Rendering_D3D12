@@ -6,6 +6,7 @@
 #include "DeferredRender.hlsli"
 
 StructuredBuffer<ClusteredBuffer> gPerTileLightIndex : register(t5);
+StructuredBuffer<int> gPerTileLightCounter : register(t7);	// Light counter buffer.
 
 [maxvertexcount(3)]
 void main(
@@ -16,7 +17,7 @@ void main(
 	uint tileIndex = index/2;
 
 	// Use triangles' indexes to load an element in light indexed buffer.
-	uint totalNum = gPerTileLightIndex[tileIndex].counter;
+	uint totalNum = gPerTileLightCounter[tileIndex];
 	{
 		gs_out element;
 		// Triangle's index.

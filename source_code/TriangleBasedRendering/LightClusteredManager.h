@@ -29,6 +29,8 @@ public:
 	ID3D12Resource* const   GetClusteredBuffer() const { return m_clusteredBuffer.Get(); }
 	// Get light culling CB.
 	ID3D12Resource* const   GetClusteredCB() const { return m_clusteredCB.Get(); }
+	// Get light counter buffer.
+	ID3D12Resource* const   GetCounterBuffer() const { return m_lightCounterBuffer.Get(); }
 	UINT GetAxisXNumber() { return m_uWidth; }
 	UINT GetAxisYNumber() { return m_uHeight; }
 
@@ -61,6 +63,8 @@ private:
 	bool m_bUseTriangle;
 	// Light indexed buffer.
 	Microsoft::WRL::ComPtr<ID3D12Resource> m_clusteredBuffer;
+	// The counter of light indexed buffer.
+	Microsoft::WRL::ComPtr<ID3D12Resource> m_lightCounterBuffer;
 	// Light culling CB.
 	Microsoft::WRL::ComPtr<ID3D12Resource> m_clusteredCB;
 	// Depth value for every depth plane (the total number : depth+1).

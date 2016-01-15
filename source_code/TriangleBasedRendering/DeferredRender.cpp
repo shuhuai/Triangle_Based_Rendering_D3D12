@@ -59,6 +59,7 @@ void DeferredRender::SetLightCullingMgr(LightClusteredManager & mgr)
 {
 	m_lightIdxCbGpuAdr = mgr.GetClusteredCB()->GetGPUVirtualAddress();
 	m_lightIdxBufferGpuAdr = mgr.GetClusteredBuffer()->GetGPUVirtualAddress();
+	m_lightCounterBufferGpuAdr = mgr.GetCounterBuffer()->GetGPUVirtualAddress();
 }
 
 void DeferredRender::Init()
@@ -381,18 +382,23 @@ void DeferredRender::ApplyCreateGbufferPso(ID3D12GraphicsCommandList * const com
 	command->SetGraphicsRootDescriptorTable(6, m_samplerHeap.hGPU(0));
 }
 
-void DeferredRender::ApplyLightAccumulationPso(ID3D12GraphicsCommandList * const command, bool bSetPSO)
+void DeferredRender::SetParametersLightPso(ID3D12GraphicsCommandList * const command)
 {
-	if (bSetPSO)
-	{
-		command->SetPipelineState(m_lightPso.Get());
-	}
 	// The techniques should already set DescriptorHeaps(m_cbvsrvHeap and m_samplerHeap), and
 	// set a root signature in the G-buffer creation stage.
 	//command->SetGraphicsRootSignature(m_rootSignature.Get());
 	command->SetGraphicsRootShaderResourceView(2, m_lightIdxBufferGpuAdr);
 	command->SetGraphicsRootShaderResourceView(3, m_lightBufferGpuAdr);
 	command->SetGraphicsRootConstantBufferView(4, m_lightIdxCbGpuAdr);
+	command->SetGraphicsRootShaderResourceView(7, m_lightCounterBufferGpuAdr);
+}
+void DeferredRender::ApplyLightAccumulationPso(ID3D12GraphicsCommandList * const command, bool bSetPSO)
+{
+	if (bSetPSO)
+	{
+		command->SetPipelineState(m_lightPso.Get());
+	}
+	SetParametersLightPso(command);
 }
 
 void DeferredRender::ApplyDebugPso(ID3D12GraphicsCommandList * const command, bool bSetPSO)
@@ -402,12 +408,8 @@ void DeferredRender::ApplyDebugPso(ID3D12GraphicsCommandList * const command, bo
 	{
 		command->SetPipelineState(m_lightListDebugPso.Get());
 	}
-	// The techniques should already set DescriptorHeaps(m_cbvsrvHeap and m_samplerHeap), and
-	// set a root signature in the G-buffer creation stage.
-	//command->SetGraphicsRootSignature(m_rootSignature.Get());
-	command->SetGraphicsRootShaderResourceView(2, m_lightIdxBufferGpuAdr);
-	command->SetGraphicsRootShaderResourceView(3, m_lightBufferGpuAdr);
-	command->SetGraphicsRootConstantBufferView(4, m_lightIdxCbGpuAdr);
+	SetParametersLightPso(command);
+
 }
 
 void DeferredRender::SetLightBuffer(ID3D12Resource* const lightBuffer)
@@ -430,9 +432,7 @@ void DeferredRender::ApplyTradLightAccumulation(ID3D12GraphicsCommandList * cons
 		command->SetPipelineState(m_traditionalAccumulationPso.Get());
 	}
 
-	command->SetGraphicsRootShaderResourceView(2, m_lightIdxBufferGpuAdr);
-	command->SetGraphicsRootShaderResourceView(3, m_lightBufferGpuAdr);
-	command->SetGraphicsRootConstantBufferView(4, m_lightIdxCbGpuAdr);
+	SetParametersLightPso(command);
 
 }
 
@@ -558,7 +558,7 @@ void DeferredRender::CreateRootSignature()
 	// [6][0] : Sampler Range Count : 1
 	// [6][0][0] : Sampler for sampling textures of materials (s0)
 	// --------------------------------------
-	CD3DX12_ROOT_PARAMETER rootParameters[7];
+	CD3DX12_ROOT_PARAMETER rootParameters[8];
 	CD3DX12_DESCRIPTOR_RANGE range[4];
 	// Camera data CBV.
 	rootParameters[0].InitAsConstantBufferView(0);
@@ -568,7 +568,8 @@ void DeferredRender::CreateRootSignature()
 	rootParameters[1].InitAsDescriptorTable(1, &range[1], D3D12_SHADER_VISIBILITY_PIXEL);
 
 	// Light indexed buffer.
-	rootParameters[2].InitAsShaderResourceView(5);
+	rootParameters[2].InitAsShaderResourceView(5,0, D3D12_SHADER_VISIBILITY_PIXEL);
+
 	// Light data.
 	rootParameters[3].InitAsShaderResourceView(6);
 	// Light culling data.
@@ -582,8 +583,11 @@ void DeferredRender::CreateRootSignature()
 	range[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0);
 	rootParameters[6].InitAsDescriptorTable(1, &range[3], D3D12_SHADER_VISIBILITY_PIXEL);
 
+	// Light indexed buffer.
+	rootParameters[7].InitAsShaderResourceView(7);
+
 	CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
-	descRootSignature.Init(7, rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+	descRootSignature.Init(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 	Microsoft::WRL::ComPtr<ID3DBlob> rootSigBlob, errorBlob;
 	ThrowIfFailed(D3D12SerializeRootSignature(&descRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, rootSigBlob.GetAddressOf(), errorBlob.GetAddressOf()));

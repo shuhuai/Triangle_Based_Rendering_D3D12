@@ -34,7 +34,7 @@ void LightClusteredManager::RunLightCullingCS(ID3D12GraphicsCommandList * const 
 	command->SetDescriptorHeaps(1, ppHeaps);
 	command->SetComputeRootSignature(m_rootSignature.Get());
 
-	command->SetComputeRootDescriptorTable(0, m_viewsHeap.hGPU(1));
+	command->SetComputeRootDescriptorTable(0, m_viewsHeap.hGPU(0));
 	command->SetComputeRootConstantBufferView(1, m_camCbGpuAdr);
 	command->SetComputeRootConstantBufferView(2, m_clusteredCB->GetGPUVirtualAddress());
 
@@ -86,15 +86,6 @@ void LightClusteredManager::CreateCB()
 	ThrowIfFailed(g_d3dObjects->GetD3DDevice()->CreateCommittedResource(&heapProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_clusteredCB.GetAddressOf())));
 }
 
-void LightClusteredManager::CreateCBV()
-{
-    // Create a CBV for light culling data.
-	D3D12_CONSTANT_BUFFER_VIEW_DESC	descBuffer;
-	descBuffer.BufferLocation = m_clusteredCB->GetGPUVirtualAddress();
-	descBuffer.SizeInBytes = (sizeof(ClusteredData) + 255) & ~255;
-	g_d3dObjects->GetD3DDevice()->CreateConstantBufferView(&descBuffer, m_viewsHeap.hCPU(0));
-}
-
 void LightClusteredManager::CreateTiledResources()
 {
 	CD3DX12_HEAP_PROPERTIES heapDefaultProperty(D3D12_HEAP_TYPE_DEFAULT);
@@ -119,6 +110,13 @@ void LightClusteredManager::CreateTiledResources()
 
 	ThrowIfFailed(g_d3dObjects->GetD3DDevice()->CreateCommittedResource(&heapDefaultProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(m_clusteredBuffer.GetAddressOf())));
 
+	resourceDesc.Width = sizeof(int)*m_uWidth*m_uHeight*m_uDepth;
+	if (m_bUseTriangle)
+	{
+		resourceDesc.Width = resourceDesc.Width * 2;
+	}
+	ThrowIfFailed(g_d3dObjects->GetD3DDevice()->CreateCommittedResource(&heapDefaultProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(m_lightCounterBuffer.GetAddressOf())));
+	
 }
 
 
@@ -136,6 +134,7 @@ void LightClusteredManager::CreateSRV()
 	desc.Buffer.StructureByteStride = sizeof(float);
 
 	g_d3dObjects->GetD3DDevice()->CreateShaderResourceView(m_depthPlanesBuffer.Get(), &desc, m_viewsHeap.hCPU(3));
+
 }
 
 void LightClusteredManager::CreateUAV()
@@ -156,7 +155,10 @@ void LightClusteredManager::CreateUAV()
 	desc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
 	desc.Format = DXGI_FORMAT_UNKNOWN;
 
-	g_d3dObjects->GetD3DDevice()->CreateUnorderedAccessView(m_clusteredBuffer.Get(), nullptr, &desc, m_viewsHeap.hCPU(1));
+	g_d3dObjects->GetD3DDevice()->CreateUnorderedAccessView(m_clusteredBuffer.Get(), nullptr, &desc, m_viewsHeap.hCPU(0));
+	desc.Buffer.StructureByteStride = sizeof(int);
+	g_d3dObjects->GetD3DDevice()->CreateUnorderedAccessView(m_lightCounterBuffer.Get(), nullptr, &desc, m_viewsHeap.hCPU(1));
+	
 }
 
 void LightClusteredManager::UpdateCullingCB()
@@ -233,19 +235,18 @@ void LightClusteredManager::CreateRootSignature()
 	// Total Root Parameter Count: 2.
 	// [0] : Descriptor Table Range Count: 3
 	// --------------------------------------
-	// [0][0] : CBV Range Count : 1
-	// [0][0][0] : CBV for culling data (b0)
-	// [0][1] : UAV Range Count : 1
-	// [0][1][0]: UAV for saving light indexed for every triangle(or tile) (u0)
-	// [0][2] : SRV Range Count : 3
-	// [0][2][0] : SRV for light buffer (t0)
-	// [0][2][1] : SRV for depth planes (t1)
-	// [0][2][2] : SRV for depth texture (t2)
+	// [0][0] : UAV Range Count : 1
+	// [0][0][0]: UAV for saving light indexed for every triangle(or tile) (u0)
+	// [0][1] : SRV Range Count : 3
+	// [0][1][0] : SRV for light buffer (t0)
+	// [0][1][1] : SRV for depth planes (t1)
+	// [0][1][2] : SRV for depth texture (t2)
 	// --------------------------------------
 	// [1] : CBV for the camera data (b1)
+	// [2] : CBV for culling data (b0)
 	CD3DX12_DESCRIPTOR_RANGE range[2];
 	CD3DX12_ROOT_PARAMETER parameter[3];
-	range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+	range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 2, 0);
 	range[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 0);
 	parameter[0].InitAsDescriptorTable(_countof(range), range, D3D12_SHADER_VISIBILITY_ALL);
 	parameter[1].InitAsConstantBufferView(1);
