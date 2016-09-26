@@ -368,7 +368,7 @@ void ResourceCopyManager::GpuDataCopy()
 				resourceDesc = m_copyObjects[i].resource->GetDesc();
 
 				ComPtr<ID3D12Resource> DefaultResource;
-				ThrowIfFailed(g_d3dObjects->GetD3DDevice()->CreateCommittedResource(&heapDefaultProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(DefaultResource.GetAddressOf())));
+				ThrowIfFailed(g_d3dObjects->GetD3DDevice()->CreateCommittedResource(&heapDefaultProperty, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(DefaultResource.GetAddressOf())));
 
 				m_commandList->CopyResource(DefaultResource.Get(), m_copyObjects[i].resource.Get());
 

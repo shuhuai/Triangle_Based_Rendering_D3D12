@@ -326,6 +326,7 @@ private:
 			m_bEditLight = true;
 		}
 	}
+
 	// Regenerate all lights randomly between a fbxRender's up-bound and low-bound.
 	void RandomLight(const FbxRender& render)
 	{
@@ -371,7 +372,8 @@ private:
 	
 		m_fbxRender.LoadModel("Arts\\sibenik.FBX", 1.25f);
 #endif
-
+			
+		
 		// Initialize camera.
 		m_camera.InitProjMatrix(3.14f*0.45f, static_cast<float>(m_iWidth), static_cast<float>(m_iHeight), 0.1f, 1000.0f);
 
@@ -613,7 +615,7 @@ private:
 			// It doesn't need to add commands to convert render targets to PRESENT state,
 			// because I use D2D1 to render UI, which converts render targts to PRESENT state automatically.
 			// AddResourceBarrier(mCommandList.Get(), g_d3dObjects->GetRenderTarget(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-
+			m_deferredTech.SrvToRtv(m_commandList.Get());
 			ThrowIfFailed(m_commandList->Close());
 			ID3D12CommandList* ppCommandLists[1] = { m_commandList.Get() };
 			

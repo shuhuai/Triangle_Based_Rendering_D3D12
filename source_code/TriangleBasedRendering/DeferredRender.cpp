@@ -192,7 +192,7 @@ void DeferredRender::CreateDSV()
 	resourceDesc.SampleDesc.Count = 1;
 	resourceDesc.SampleDesc.Quality = 0;
 	resourceDesc.MipLevels = 1;
-	resourceDesc.Format = m_dsvFormat;
+	resourceDesc.Format = m_dsvResourceFormat ;
 	resourceDesc.DepthOrArraySize = 1;
 	resourceDesc.Width = (UINT)g_d3dObjects->GetScreenViewport().Width;
 	resourceDesc.Height = (UINT)g_d3dObjects->GetScreenViewport().Height;
@@ -208,7 +208,7 @@ void DeferredRender::CreateDSV()
 	D3D12_DEPTH_STENCIL_VIEW_DESC desc;
 	ZeroMemory(&desc, sizeof(desc));
 	desc.Texture2D.MipSlice = 0;
-	desc.Format = resourceDesc.Format;
+	desc.Format = m_dsvFormat;
 	desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	desc.Flags = D3D12_DSV_FLAG_NONE;
 	g_d3dObjects->GetD3DDevice()->CreateDepthStencilView(m_dsvTexture.Get(), &desc, m_dsvHeap.hCPU(0));

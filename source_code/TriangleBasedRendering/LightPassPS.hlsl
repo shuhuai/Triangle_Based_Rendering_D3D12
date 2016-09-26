@@ -18,7 +18,7 @@ StructuredBuffer<ClusteredBuffer> gPerTileLightIndex : register(t5);	// Light in
 ConstantBuffer<ClusteredData> gCB : register(b2);	// Light culling information.
 StructuredBuffer<PointLight> gLightSRV : register(t6);	// Light buffer.
 
-float3 main(gs_out pIn) : SV_TARGET
+float4 main(gs_out pIn) : SV_TARGET
 {
 	// Reconstruct world position with depth buffer.
 	float z = gDepth[pIn.position.xy].x;
@@ -65,5 +65,5 @@ float3 main(gs_out pIn) : SV_TARGET
 		}
 	}
 
-return col;
+return float4(col,1);
 }
